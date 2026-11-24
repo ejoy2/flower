@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>حديقة ورد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#fff4ee;--rose:#ff7aa2}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#12061f;font-family:'Amiri',serif;color:var(--ink);-webkit-user-select:none;user-select:none}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+  /* ---------- envelope ---------- */
+  .stage{position:fixed;inset:0;display:grid;place-items:center;z-index:5;transition:opacity 1.4s ease,transform 1.4s ease}
+  .stage.gone{opacity:0;transform:scale(.7) translateY(40px);pointer-events:none}
+  .env{position:relative;width:min(340px,80vw);aspect-ratio:3/2;cursor:pointer;filter:drop-shadow(0 30px 40px rgba(0,0,0,.55));animation:float 3.4s ease-in-out infinite}
+  .env.open{animation:none}
+  @keyframes float{50%{transform:translateY(-12px)}}
+  .env>*{position:absolute}
+  .back{inset:0;border-radius:10px;background:linear-gradient(160deg,#f7a8be,#d9647f)}
+  .paper{left:8%;right:8%;top:8%;bottom:8%;border-radius:5px;background:linear-gradient(#fffaf3,#ffeede);transition:transform 1.1s cubic-bezier(.2,.8,.2,1) .55s;display:grid;place-items:center;color:#c0405e;font-family:'Aref Ruqaa',serif;font-size:22px}
+  .env.open .paper{transform:translateY(-62%)}
+  .front{inset:0;border-radius:10px;background:linear-gradient(200deg,#f3869f,#c94c6a);clip-path:polygon(0 0,50% 52%,100% 0,100% 100%,0 100%)}
+  .flap{left:0;right:0;top:0;height:56%;z-index:3;background:linear-gradient(#e0657f,#cf4f6c);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .8s ease}
+  .env.open .flap{transform:rotateX(180deg);z-index:0;transition:transform .8s ease,z-index 0s .4s}
+  .seal{left:50%;top:52%;width:58px;height:58px;margin:-29px 0 0 -29px;z-index:4;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff6a8d,#a3153f 70%);box-shadow:0 4px 10px rgba(0,0,0,.4),inset 0 -3px 6px rgba(0,0,0,.3);display:grid;place-items:center;font-size:26px;color:#ffd6df;transition:opacity .4s,transform .5s}
+  .env.open .seal{opacity:0;transform:scale(1.6)}
+  .hint{position:absolute;bottom:max(7vh,28px);left:50%;transform:translateX(-50%);white-space:nowrap;padding:10px 24px;border-radius:999px;background:rgba(20,6,30,.6);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,190,210,.28);font-family:'Amiri',serif;font-size:19px;color:#ffe3ea;animation:pulse 2.4s ease-in-out infinite;transition:opacity .5s}
+  .stage.opened .hint{opacity:0;animation:none}
+  .scrim{position:fixed;left:0;right:0;bottom:0;height:34vh;z-index:3;pointer-events:none;background:linear-gradient(to top,rgba(10,3,14,.78),rgba(10,3,14,.4) 55%,rgba(10,3,14,0));opacity:0;transition:opacity 2s}
+  .scrim.show{opacity:1}
+  @keyframes pulse{50%{opacity:.35}}
+
+  /* ---------- letter ---------- */
+  .letter{position:fixed;left:50%;top:50%;width:min(560px,90vw);max-height:78vh;overflow:auto;transform:translate(-50%,-46%);z-index:7;
+    padding:26px 30px;border-radius:22px;background:rgba(30,8,36,.42);backdrop-filter:blur(10px) saturate(1.3);-webkit-backdrop-filter:blur(10px) saturate(1.3);
+    border:1px solid rgba(255,190,210,.28);box-shadow:0 20px 60px rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity 1.6s ease,transform 1.6s ease;text-align:center}
+  .letter.show{opacity:1;transform:translate(-50%,-50%);pointer-events:auto}
+  .letter .x{position:absolute;top:10px;left:14px;background:none;border:0;color:#ffd0dc;font-size:28px;cursor:pointer;line-height:1}
+  .veil{position:fixed;inset:0;z-index:6;background:rgba(10,2,16,.55);opacity:0;pointer-events:none;transition:opacity 1s}
+  .veil.show{opacity:1;pointer-events:auto}
+  .bar{position:fixed;left:0;right:0;bottom:22px;z-index:5;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;pointer-events:none;transition:opacity 1.4s}
+  .bar.show{opacity:1}
+  .bar.show button{pointer-events:auto}
+  .open-letter{font:700 20px 'Aref Ruqaa',serif;color:#fff;background:linear-gradient(135deg,#ff5f8f,#d12f63);border:0;border-radius:999px;padding:12px 28px;cursor:pointer;box-shadow:0 0 0 0 rgba(255,95,143,.6),0 10px 30px rgba(0,0,0,.4);animation:ring 2.2s infinite}
+  @keyframes ring{70%{box-shadow:0 0 0 18px rgba(255,95,143,0),0 10px 30px rgba(0,0,0,.4)}100%{box-shadow:0 0 0 0 rgba(255,95,143,0),0 10px 30px rgba(0,0,0,.4)}}
+  .letter .poem{font-family:'Aref Ruqaa',serif;color:#ffd7a8;margin-top:12px;font-size:clamp(18px,3vw,24px);line-height:1.9;text-shadow:0 0 16px rgba(255,170,100,.45)}
+  .letter .poem small{display:block;font-size:.65em;color:#ffc4d4;opacity:.85}
+  .verse{position:fixed;left:50%;bottom:clamp(104px,15vh,150px);transform:translateX(-50%);width:max-content;max-width:92vw;z-index:4;text-align:center;font-family:'Aref Ruqaa',serif;font-size:clamp(18px,2.6vw,28px);line-height:1.8;color:#ffe9cf;
+    padding:12px 28px 10px;border-radius:20px;background:rgba(18,5,26,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,200,170,.22);
+    text-shadow:0 0 14px rgba(255,150,90,.4);opacity:0;transition:opacity 1.6s ease;pointer-events:none}
+  .verse.on{opacity:1}
+  .verse small{display:block;font-family:'Amiri',serif;font-size:.55em;color:#ffc4d4;opacity:.85}
+  .snd{position:fixed;right:16px;top:14px;z-index:6;min-width:56px;height:38px;padding:0 14px;font:inherit;font-size:16px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:18px;cursor:pointer;opacity:0;pointer-events:none;transition:opacity 1s}
+  .snd.show{opacity:.85;pointer-events:auto}
+  .tip{font-size:16px;color:#ffd9e3;opacity:.8;text-shadow:0 1px 6px #000}
+  .letter h1{font-family:'Aref Ruqaa',serif;font-weight:700;font-size:clamp(28px,5vw,40px);color:#ffb3c8;margin-bottom:10px;text-shadow:0 0 24px rgba(255,100,150,.6)}
+  .letter{scrollbar-width:none;padding:18px 24px}
+  .letter::-webkit-scrollbar{display:none}
+  .letter p{font-size:clamp(16px,2.6vw,21px);line-height:1.75;margin:2px 0;opacity:0;transform:translateY(8px)}
+  .letter.show p{animation:in 1.2s ease forwards}
+  .letter .sig{font-family:'Aref Ruqaa',serif;margin-top:12px;color:#ffc4d4;font-size:clamp(20px,3.6vw,26px)}
+  @keyframes in{to{opacity:1;transform:none}}
+  .replay{position:fixed;left:16px;top:14px;z-index:6;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:999px;padding:8px 16px;font:inherit;font-size:16px;cursor:pointer;opacity:0;pointer-events:none;transition:opacity 1s}
+  .replay.show{opacity:.85;pointer-events:auto}
+  .replay:hover{opacity:1;background:rgba(255,255,255,.2)}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="stage" id="stage">
+  <div class="env" id="env" role="button" tabindex="0" aria-label="افتح الرسالة">
+    <div class="back"></div>
+    <div class="paper" id="paperText"></div>
+    <div class="front"></div>
+    <div class="flap"></div>
+    <div class="seal"><svg width="26" height="24" viewBox="0 0 32 29" aria-hidden="true"><path fill="#ffd6df" d="M16 28C-6 14 4-4 16 7 28-4 38 14 16 28Z"/></svg></div>
+  </div>
+  <div class="hint">اضغطي على الظرف لتفتحي الهدية</div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="verse" id="verse"></div>
+<button class="snd" id="snd" aria-label="الموسيقى">صوت</button>
+<div class="veil" id="veil"></div>
+<div class="letter" id="letter"></div>
+<div class="bar" id="bar">
+  <button class="open-letter" id="openLetter">رسالة لكِ</button>
+  <div class="tip">المسي الأرض لتزرعي وردة</div>
+</div>
+<button class="replay" id="replay">أعيدي الحديقة</button>
+
+<script>
+/* ==================== الإعدادات — عدّل هنا ==================== */
+const CONFIG = {
+  name: 'زوزة',               // أو افتح الصفحة بـ ?name=اسمك
+  paperText: '',   // اتركه فارغاً ليظهر الاسم على الورقة
+  paragraphs: [
+    'أكتبُ لكِ وأنا أبتسم، لأن اسمكِ وحده يكفي ليطمئنَّ قلبي.',
+    'أنتِ لستِ جزءاً من يومي، أنتِ اليومُ كلُّه؛ الضحكةُ التي أنتظرها، والأمانُ الذي أعودُ إليه.',
+    'كلُّ هذه الورود قليلةٌ عليكِ، لكنني أردتُ أن تعرفي أن في قلبي مكاناً لا يُزهر إلا بكِ.',
+    'شكراً لأنكِ موجودة، ولأنكِ أنتِ.',
+    'أحبكِ يا زوزة، أكثرَ مما تقوله الكلمات.'
+  ],
+  signature: 'ما حييتُ، لكِ',
+  // بيت يُضاف في آخر الرسالة (شعر قديم من التراث)
+  letterVerse: {a: 'إني ذكرتُكِ بالزهراءِ مشتاقاً', b: 'والأفقُ طلقٌ ومرأى الأرضِ قد راقا', by: 'ابن زيدون'}
+};
+/* أبيات غزل من التراث العربي (شعراء متوفّون منذ قرون) تتعاقب على الشاشة */
+const VERSES = [
+  {a: 'وللنسيمِ اعتلالٌ في أصائلِهِ', b: 'كأنه رقَّ لي فاعتلَّ إشفاقا', by: 'ابن زيدون'},
+  {a: 'والروضُ عن مائهِ الفضيِّ مبتسمٌ', b: 'كما شققتَ عن اللبّاتِ أطواقا', by: 'ابن زيدون'},
+  {a: 'أمرُّ على الديارِ ديارِ ليلى', b: 'أقبّلُ ذا الجدارَ وذا الجدارا', by: 'قيس بن الملوّح'},
+  {a: 'وما حبُّ الديارِ شغفنَ قلبي', b: 'ولكن حبُّ مَن سكنَ الديارا', by: 'قيس بن الملوّح'},
+  {a: 'وإني لأرضى من بثينةَ بالذي', b: 'لو أبصرَه الواشي لقرَّتْ بلابلُه', by: 'جميل بثينة'},
+  {a: 'ألا ليتنا نحيا جميعاً وإن نمتْ', b: 'يوافقْ في الموتى ضريحي ضريحُها', by: 'جميل بثينة'},
+  CONFIG.letterVerse
+];
+const qn = new URLSearchParams(location.search).get('name');
+if (qn) CONFIG.name = qn;
+
+/* ==================== الرسالة ==================== */
+(function buildLetter(){
+  const L = document.getElementById('letter');
+  const esc = s => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  let h = '<button class="x" id="closeLetter" aria-label="إغلاق">×</button><h1>إلى ' + esc(CONFIG.name) + '</h1>';
+  CONFIG.paragraphs.forEach((p,i) => h += '<p style="animation-delay:' + (1 + i*1.1) + 's">' + esc(p) + '</p>');
+  const lv = CONFIG.letterVerse;
+  h += '<p class="poem" style="animation-delay:' + (1 + CONFIG.paragraphs.length*1.1) + 's">' + esc(lv.a) + '<br>' + esc(lv.b) + '<small>— ' + esc(lv.by) + '</small></p>';
+  h += '<p class="sig" style="animation-delay:' + (1 + CONFIG.paragraphs.length*1.1) + 's">' + esc(CONFIG.signature) + '</p>';
+  L.innerHTML = h;
+  document.getElementById('paperText').textContent = CONFIG.paperText || CONFIG.name;
+})();
+
+/* ==================== الحديقة ==================== */
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let W, H, DPR, stars, blades, roses, flies, petals, started = false, t0 = 0;
+let glyphImg = null, glyphPos = {x: 0, y: 0};
+let glyphs = [], bursts = [], heart = {k: 10, cx: 0, cy: 0}, par = 0, parT = 0, glyphsBuilt = false;
+function sortRoses(){
+  roses.forEach(r => r.key = r.heart ? r.y - r.h : r.y);
+  roses.sort((a,b) => a.key - b.key);
+}
+const TAU = Math.PI * 2;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const ease = t => 1 - Math.pow(1 - t, 3);
+const hsl = (h, s, l, a = 1) => `hsla(${h},${s}%,${Math.max(0, Math.min(100, l))}%,${a})`;
+
+const PALETTE = [
+  [352,78,40],[352,78,40],[348,82,46],[346,80,50],[338,72,62],[334,70,70],[350,70,80],
+  [18,82,68],[322,62,50],[28,40,92],[0,85,48],[342,75,56]
+];
+
+function build(){
+  stars = Array.from({length: 170}, () => ({x: Math.random()*W, y: Math.random()*H*0.6, r: rnd(.4,1.6), p: rnd(0,TAU), s: rnd(.6,2)}));
+  const horizon = H * 0.66;
+  blades = Array.from({length: Math.round(W/3.2)}, () => {
+    const d = Math.random();
+    return {x: rnd(-10, W+10), y: horizon + (H-horizon)*Math.pow(d,0.8) + 6, h: rnd(14,44)*(0.5+d), lean: rnd(-12,12), p: rnd(0,TAU), hue: rnd(100,150), l: rnd(14,30), front: Math.random() < .35};
+  });
+  // ---- القلب: ورود تشكّل قلباً كبيراً في السماء فوق الحديقة ----
+  heart.k = Math.min(H*0.0145, W*0.025); heart.cx = W/2; heart.cy = H*0.37;
+  const hp = (t, sc) => ({
+    x: heart.cx + 16*Math.pow(Math.sin(t),3)*heart.k*sc,
+    y: heart.cy - (13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t))*heart.k*sc});
+  const OUT = [[352,80,42],[348,82,48],[350,78,38],[340,75,55],[0,82,46]];
+  const INN = [[338,72,62],[334,70,70],[350,70,80],[18,82,68],[346,78,56]];
+  const hr = [];
+  const ring = (n, sc, pal, hsK, d0, step) => {
+    for (let i = 0; i < n; i++){
+      const t = Math.PI + i/n*TAU, p = hp(t, sc);
+      const dist = Math.min(i, n - i);
+      const by = H*rnd(0.8, 0.94);
+      const bx = heart.cx + (p.x - heart.cx)*0.09 + rnd(-6,6);   // الجذوع تتجمع كباقة عند القاعدة
+      hr.push({x: bx, dx: p.x - bx, y: by, s: .9, c: pal[Math.floor(Math.random()*pal.length)], hs: heart.k*hsK*rnd(.9,1.1), h: by - p.y,
+        bend: rnd(-4,4), sw: 1.4, ph: rnd(0,TAU), rot: rnd(0,TAU), delay: reduce ? rnd(0,1) : d0 + dist*step, dur: reduce ? 1 : 2.4,
+        leaf: Math.random()<.5 ? 1 : -1, heart: true});
+    }
+  };
+  ring(46, 1.04, OUT, 1.85, 1.0, 0.1);
+  ring(34, 1.14, INN, 1.5, 2.4, 0.1);
+
+  // ---- حقل الورد على الأرض ----
+  const count = Math.max(16, Math.min(50, Math.round(W/30)));
+  const meadow = Array.from({length: count}, () => {
+    const d = Math.pow(Math.random(), 1.25);
+    const s = 0.45 + d*0.8;
+    const y = horizon + (H - horizon) * (0.04 + 0.9*d);
+    const c = PALETTE[Math.floor(Math.random()*PALETTE.length)];
+    const hs = (H*0.028 + W*0.006) * s * rnd(.85,1.15);
+    const headY = rnd(H*0.6, y - H*0.06);
+    return {x: rnd(-20, W+20), y, s, c, hs, h: y - headY, bend: rnd(-30,30)*s, sw: rnd(4,9)*s, ph: rnd(0,TAU), rot: rnd(0,TAU),
+      delay: reduce ? rnd(0,1) : rnd(2, 9), dur: reduce ? 1 : rnd(2.6, 3.6), leaf: Math.random()<.5 ? 1 : -1};
+  });
+  roses = hr.concat(meadow);
+  sortRoses();
+  glyphs = []; glyphsBuilt = false;
+  flies = Array.from({length: 46}, () => ({x: Math.random()*W, y: rnd(H*0.35, H*0.95), p: rnd(0,TAU), sp: rnd(.2,.6), r: rnd(1.2,2.6)}));
+  petals = Array.from({length: 55}, () => newPetal(true));
+}
+function newPetal(init){
+  return {x: Math.random()*W, y: init ? rnd(-H, 0) : rnd(-60,-10), r: rnd(5,10), vy: rnd(18,45), p: rnd(0,TAU), rot: rnd(0,TAU), vr: rnd(-1.5,1.5), h: Math.random()<.7 ? rnd(335,355) : rnd(15,30)};
+}
+function resize(){
+  DPR = Math.min(devicePixelRatio || 1, 2);
+  W = innerWidth; H = innerHeight;
+  cv.width = W*DPR; cv.height = H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  build();
+}
+addEventListener('resize', resize);
+
+const shoots = [];
+function drawShoots(dt){
+  if (started && Math.random() < dt*0.22) shoots.push({x: rnd(W*.2, W), y: rnd(0, H*.3), vx: -rnd(380,560), vy: rnd(150,260), life: 1});
+  for (let i = shoots.length - 1; i >= 0; i--){
+    const s = shoots[i]; s.life -= dt*1.1;
+    if (s.life <= 0){ shoots.splice(i,1); continue; }
+    s.x += s.vx*dt; s.y += s.vy*dt;
+    const g = ctx.createLinearGradient(s.x, s.y, s.x - s.vx*.14, s.y - s.vy*.14);
+    g.addColorStop(0, `rgba(255,255,255,${s.life})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.strokeStyle = g; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x - s.vx*.14, s.y - s.vy*.14); ctx.stroke();
+  }
+}
+function drawSky(t){
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#0c0420'); g.addColorStop(.38,'#2a0b3d'); g.addColorStop(.62,'#7a1f55'); g.addColorStop(.74,'#d9566b'); g.addColorStop(.8,'#2a0d26'); g.addColorStop(1,'#10040f');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  for (const s of stars){
+    ctx.globalAlpha = .35 + .65*(0.5+0.5*Math.sin(t*s.s + s.p));
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  // moon
+  const mx = W*0.82, my = H*0.17, mr = Math.min(W,H)*0.05;
+  let mg = ctx.createRadialGradient(mx,my,mr*.6,mx,my,mr*5);
+  mg.addColorStop(0,'rgba(255,220,235,.35)'); mg.addColorStop(1,'rgba(255,220,235,0)');
+  ctx.fillStyle = mg; ctx.fillRect(mx-mr*5,my-mr*5,mr*10,mr*10);
+  ctx.fillStyle = '#fff1f4'; ctx.beginPath(); ctx.arc(mx,my,mr,0,TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(214,150,180,.35)';
+  ctx.beginPath(); ctx.arc(mx-mr*.3,my-mr*.2,mr*.22,0,TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(mx+mr*.35,my+mr*.3,mr*.15,0,TAU); ctx.fill();
+  // ground
+  const gy = H*0.66;
+  const gg = ctx.createLinearGradient(0,gy,0,H);
+  gg.addColorStop(0,'#2a1230'); gg.addColorStop(.25,'#1a0b1f'); gg.addColorStop(1,'#08030a');
+  ctx.fillStyle = gg;
+  ctx.beginPath(); ctx.moveTo(0,gy+8);
+  for (let x=0; x<=W; x+=40) ctx.lineTo(x, gy + Math.sin(x*0.01 + 1)*8 + Math.sin(x*0.027)*5);
+  ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.fill();
+}
+
+function drawBlades(t, front){
+  ctx.lineCap = 'round';
+  for (const b of blades){
+    if (b.front !== front) continue;
+    const sw = Math.sin(t*1.2 + b.p)*5 + b.lean;
+    const bh = front ? b.h*.7 : b.h;
+    ctx.strokeStyle = hsl(b.hue, 40, b.l - (front ? 6 : 0));
+    ctx.lineWidth = front ? 2 : 1.5;
+    ctx.beginPath(); ctx.moveTo(b.x, b.y);
+    ctx.quadraticCurveTo(b.x + sw*.4, b.y - bh*.55, b.x + sw, b.y - bh);
+    ctx.stroke();
+  }
+}
+
+function qpt(p0, c, p2, t){ const u = 1-t; return u*u*p0 + 2*u*t*c + t*t*p2; }
+
+function drawLeaf(x, y, ang, len, hue){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(ang);
+  const g = ctx.createLinearGradient(0,0,len,0);
+  g.addColorStop(0, hsl(hue,50,18)); g.addColorStop(1, hsl(hue,55,34));
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.moveTo(0,0);
+  ctx.quadraticCurveTo(len*.5, -len*.38, len, 0);
+  ctx.quadraticCurveTo(len*.5, len*.3, 0, 0); ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = .8;
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(len*.9,0); ctx.stroke();
+  ctx.restore();
+}
+
+function drawRose(r, t, now){
+  const el = now - r.delay;
+  if (el <= 0) return;
+  const g = Math.min(1, el / r.dur);
+  const sp = ease(Math.min(1, g/0.5));
+  const bp = ease(Math.max(0, (g-0.38)/0.62));
+  const sway = Math.sin(t*0.9 + r.ph) * r.sw;
+  const topY = r.y - r.h*sp;
+  const topX = r.x + (r.dx||0)*sp + sway*sp;
+  const cx = r.x + (r.dx||0)*sp*.16 + r.bend*sp + sway*.3, cy = (r.y + topY)/2;
+
+  // stem
+  ctx.strokeStyle = hsl(125, 40, 17 + r.s*4); ctx.lineWidth = r.heart ? 1.7 : Math.max(2, 3.2*r.s); ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.quadraticCurveTo(cx, cy, topX, topY); ctx.stroke();
+  // leaves
+  for (const [k, side] of [[.28, r.leaf], [.52, -r.leaf], [.72, r.leaf]]){
+    const lp = ease(Math.max(0, Math.min(1, (sp - k*.8)/0.25)));
+    if (lp <= 0 || (r.heart && r.leaf < 0)) continue;
+    const lx = qpt(r.x, cx, topX, k), ly = qpt(r.y, cy, topY, k);
+    drawLeaf(lx, ly, side > 0 ? -0.5 : Math.PI + 0.5, r.hs*1.15*lp, 130);
+  }
+  if (sp < .55) return;
+
+  // head
+  const o = bp;
+  const size = r.hs * (0.32 + 0.68*o);
+  const [bh, bs, bl] = r.c;
+  ctx.save(); ctx.translate(topX, topY); ctx.rotate(sway*0.012);
+
+  // soft glow
+  const glow = ctx.createRadialGradient(0,0,size*.2,0,0,size*2.1);
+  glow.addColorStop(0, hsl(bh,bs,bl+10,.28*o)); glow.addColorStop(1, hsl(bh,bs,bl,0));
+  ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(0,0,size*2.1,0,TAU); ctx.fill();
+
+  // sepals
+  if (o < .9){
+    ctx.fillStyle = hsl(125,45,22,1-o);
+    for (let i=0;i<5;i++){ ctx.save(); ctx.rotate(i/5*TAU + r.rot); ctx.beginPath(); ctx.ellipse(0, size*.9, size*.16, size*.55, 0, 0, TAU); ctx.fill(); ctx.restore(); }
+  }
+
+  const layers = size < 16 ? 3 : 5;
+  for (let i = 0; i < layers; i++){
+    const n = [8,7,6,5,4][i];
+    const lr = size * (1 - i*0.17);
+    const off = lr * (0.1 + 0.42*o) * (1 - i*0.1);
+    const pr = lr * (0.5 + 0.2*o);
+    const l = bl + 12 - i*5.5;
+    for (let j = 0; j < n; j++){
+      const a = j/n*TAU + i*0.83 + r.rot;
+      ctx.save();
+      ctx.rotate(a); ctx.translate(off, 0);
+      const pg = ctx.createLinearGradient(-pr,0,pr,0);
+      pg.addColorStop(0, hsl(bh, bs, l - 14));
+      pg.addColorStop(.55, hsl(bh, bs, l));
+      pg.addColorStop(1, hsl(bh, bs - 8, l + 10));
+      ctx.fillStyle = pg;
+      ctx.beginPath(); ctx.ellipse(0, 0, pr, pr*(0.78 + 0.1*Math.sin(j*2.1+i)), 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = hsl(bh, bs, bl - 22, .35); ctx.lineWidth = Math.max(.6, size*.02); ctx.stroke();
+      ctx.restore();
+    }
+  }
+  // center swirl
+  ctx.strokeStyle = hsl(bh, bs, bl - 24, .55); ctx.lineWidth = Math.max(.8, size*.045); ctx.lineCap = 'round';
+  for (let k = 0; k < 3; k++){
+    ctx.beginPath(); ctx.arc(0, 0, size*(0.1 + 0.1*k), r.rot + k*2.1, r.rot + k*2.1 + 3.4); ctx.stroke();
+  }
+  // highlight
+  const hg = ctx.createRadialGradient(-size*.3, -size*.35, 0, -size*.3, -size*.35, size*.9);
+  hg.addColorStop(0, 'rgba(255,255,255,.2)'); hg.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(0,0,size*1.05,0,TAU); ctx.fill();
+  ctx.restore();
+}
+
+function drawFlies(t, dt){
+  ctx.globalCompositeOperation = 'lighter';
+  for (const f of flies){
+    f.x += Math.cos(t*f.sp + f.p)*12*dt; f.y += Math.sin(t*f.sp*1.3 + f.p)*9*dt;
+    if (f.x < -20) f.x = W+20; if (f.x > W+20) f.x = -20;
+    const a = .35 + .65*(0.5+0.5*Math.sin(t*1.6 + f.p*3));
+    const gr = ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r*7);
+    gr.addColorStop(0, `rgba(255,224,140,${.9*a})`); gr.addColorStop(1, 'rgba(255,200,100,0)');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(f.x,f.y,f.r*7,0,TAU); ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function drawPetals(t, dt){
+  for (const p of petals){
+    p.y += p.vy*dt; p.x += Math.sin(t*.8 + p.p)*22*dt; p.rot += p.vr*dt;
+    if (p.y > H + 20) Object.assign(p, newPetal(false));
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+    ctx.scale(1, .55 + .45*Math.abs(Math.sin(t*1.5 + p.p)));
+    ctx.fillStyle = hsl(p.h, 75, 62, .85);
+    ctx.beginPath(); ctx.ellipse(0,0,p.r,p.r*.65,0,0,TAU); ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawMist(){
+  const y = H*0.66;
+  const g = ctx.createLinearGradient(0,y-60,0,y+90);
+  g.addColorStop(0,'rgba(255,170,200,0)'); g.addColorStop(.5,'rgba(255,170,200,.10)'); g.addColorStop(1,'rgba(255,170,200,0)');
+  ctx.fillStyle = g; ctx.fillRect(0,y-60,W,150);
+}
+
+function drawHeartGlow(t, now){
+  const a = Math.max(0, Math.min(1, (now - 4)/4));
+  if (a <= 0) return;
+  const beat = 1 + 0.07*Math.pow(Math.max(0, Math.sin(t*3.2)), 3);
+  const R = heart.k*24*beat;
+  const g = ctx.createRadialGradient(heart.cx, heart.cy, 0, heart.cx, heart.cy, R);
+  g.addColorStop(0, `rgba(255,90,140,${.34*a})`); g.addColorStop(.55, `rgba(255,60,120,${.12*a})`); g.addColorStop(1, 'rgba(255,60,120,0)');
+  ctx.fillStyle = g; ctx.fillRect(heart.cx-R, heart.cy-R, R*2, R*2);
+}
+
+/* الاسم يتشكّل من اليراعات داخل القلب */
+async function buildGlyphs(){
+  if (glyphsBuilt) return; glyphsBuilt = true;
+  try { await document.fonts.load('700 100px "Aref Ruqaa"'); } catch(e){}
+  const maxW = heart.k*19;
+  let fs = heart.k*9;
+  const m = document.createElement('canvas').getContext('2d');
+  m.font = `700 ${fs}px 'Aref Ruqaa',serif`;
+  const w = m.measureText(CONFIG.name).width;
+  if (w > maxW) fs *= maxW/w;
+  const off = document.createElement('canvas');
+  off.width = Math.ceil(maxW + fs); off.height = Math.ceil(fs*1.9);
+  const o = off.getContext('2d');
+  o.font = `700 ${fs}px 'Aref Ruqaa',serif`; o.textAlign = 'center'; o.textBaseline = 'middle'; o.direction = 'rtl';
+  o.fillStyle = '#fff0f4'; o.fillText(CONFIG.name, off.width/2, off.height/2);
+  const data = o.getImageData(0, 0, off.width, off.height).data;
+  let step = Math.max(2, Math.round(fs/26)), pts = [];
+  for (;;){
+    pts = [];
+    for (let y = 0; y < off.height; y += step) for (let x = 0; x < off.width; x += step)
+      if (data[(y*off.width + x)*4 + 3] > 128) pts.push([x, y]);
+    if (pts.length <= 750) break; step++;
+  }
+  const ox = heart.cx - off.width/2, oy = heart.cy - heart.k*0.6 - off.height/2;
+  glyphImg = off; glyphPos = {x: ox, y: oy};
+  glyphs = pts.map(([x,y]) => ({x: rnd(0,W), y: rnd(0,H), tx: ox + x, ty: oy + y, p: rnd(0,TAU), d: rnd(0,2.2), r: rnd(1.1,2)}));
+}
+function drawGlyphs(t, dt, now){
+  if (now < 6.5) return;
+  if (!glyphsBuilt) buildGlyphs();
+  if (glyphImg && now > 9.5){
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, (now - 9.5)/2.5) * .85;
+    ctx.shadowColor = 'rgba(255,110,160,.95)'; ctx.shadowBlur = 16;
+    ctx.drawImage(glyphImg, glyphPos.x, glyphPos.y);
+    ctx.restore();
+  }
+  ctx.globalCompositeOperation = 'lighter';
+  for (const g of glyphs){
+    if (now - 6.5 < g.d) continue;
+    const k = Math.min(1, dt*2.4);
+    g.x += (g.tx + Math.sin(t*1.7 + g.p)*1.4 - g.x)*k;
+    g.y += (g.ty + Math.cos(t*1.4 + g.p)*1.4 - g.y)*k;
+    const a = .55 + .45*Math.sin(t*3 + g.p);
+    const rr = g.r*2.4;
+    const gr = ctx.createRadialGradient(g.x,g.y,0,g.x,g.y,rr);
+    gr.addColorStop(0, `rgba(255,244,200,${a})`); gr.addColorStop(.45, `rgba(255,170,200,${.35*a})`); gr.addColorStop(1, 'rgba(255,120,170,0)');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(g.x,g.y,rr,0,TAU); ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+/* زرع وردة بلمسة */
+function plant(x, y){
+  const horizon = H*0.66;
+  const by = Math.min(H*0.97, Math.max(horizon + H*0.06, y + H*0.2));
+  const headY = Math.min(y, by - H*0.06);
+  const d = (by - horizon)/(H - horizon), s = 0.55 + d*0.9;
+  const now = performance.now()/1000 - t0;
+  roses.push({x, y: by, s, c: PALETTE[Math.floor(Math.random()*PALETTE.length)], hs: (H*0.03 + W*0.007)*s*1.1,
+    h: by - headY, bend: rnd(-20,20)*s, sw: rnd(4,8)*s, ph: rnd(0,TAU), rot: rnd(0,TAU), delay: now, dur: 2.2, leaf: Math.random()<.5 ? 1 : -1});
+  sortRoses();
+  setTimeout(() => {
+    for (let i = 0; i < 16; i++){
+      const a = rnd(0,TAU), v = rnd(40,140);
+      bursts.push({x, y: headY, vx: Math.cos(a)*v, vy: Math.sin(a)*v - 60, life: 1, r: rnd(4,8), h: Math.random()<.7 ? rnd(335,355) : rnd(15,30), rot: rnd(0,TAU)});
+    }
+  }, 1700);
+}
+function drawBursts(dt){
+  for (let i = bursts.length - 1; i >= 0; i--){
+    const b = bursts[i];
+    b.life -= dt*.6; if (b.life <= 0){ bursts.splice(i,1); continue; }
+    b.vy += 120*dt; b.x += b.vx*dt; b.y += b.vy*dt; b.vx *= .985; b.rot += dt*3;
+    ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(b.rot); ctx.globalAlpha = b.life;
+    ctx.fillStyle = hsl(b.h,75,62); ctx.beginPath(); ctx.ellipse(0,0,b.r,b.r*.6,0,0,TAU); ctx.fill();
+    ctx.restore();
+  }
+}
+
+let last = performance.now();
+function frame(nowMs){
+  const dt = Math.min(.05, (nowMs-last)/1000); last = nowMs;
+  const t = nowMs/1000;
+  const now = started ? t - t0 : -1;
+  par += (parT - par) * Math.min(1, dt*3);
+  drawSky(t);
+  drawShoots(dt);
+  drawMist();
+  drawBlades(t, false);
+  if (started) drawHeartGlow(t, now);
+  if (started) for (const r of roses){ ctx.save(); ctx.translate(par*r.s*16, 0); drawRose(r, t, now); ctx.restore(); }
+  drawBlades(t, true);
+  drawFlies(t, dt);
+  if (started) drawGlyphs(t, dt, now);
+  if (started && now > 2 && !reduce) drawPetals(t, dt);
+  drawBursts(dt);
+  requestAnimationFrame(frame);
+}
+
+/* ==================== التحكم ==================== */
+const env = document.getElementById('env'), stage = document.getElementById('stage');
+const letter = document.getElementById('letter'), replay = document.getElementById('replay');
+/* موسيقى هادئة مولَّدة بالكود (بدون ملفات) */
+let actx, master, musicMuted = false;
+function startMusic(){
+  try {
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    master = actx.createGain(); master.gain.value = 0; master.connect(actx.destination);
+    master.gain.linearRampToValueAtTime(.55, actx.currentTime + 5);
+    const dl = actx.createDelay(); dl.delayTime.value = .46;
+    const fb = actx.createGain(); fb.gain.value = .4; const wet = actx.createGain(); wet.gain.value = .5;
+    dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(master);
+    const tone = (f, type, vol, atk, dur) => {
+      const o = actx.createOscillator(), g = actx.createGain(), n = actx.currentTime;
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(0, n); g.gain.linearRampToValueAtTime(vol, n + atk); g.gain.exponentialRampToValueAtTime(.0001, n + dur);
+      o.connect(g); g.connect(master); g.connect(dl); o.start(n); o.stop(n + dur + .1);
+    };
+    const chords = [[220,261.63,329.63],[174.61,220,261.63],[261.63,329.63,392],[196,246.94,293.66]];
+    const bells = [440,523.25,587.33,659.25,783.99,880,1046.5];
+    let ci = 0;
+    const pad = () => { chords[ci++ % 4].forEach(f => tone(f, 'triangle', .07, 1.8, 6.4)); setTimeout(pad, 6000); };
+    const bell = () => { if (Math.random() < .8) tone(bells[Math.floor(Math.random()*bells.length)], 'sine', .1, .02, 2.8); setTimeout(bell, rnd(500,1200)); };
+    pad(); bell();
+    const b = document.getElementById('snd'); b.classList.add('show');
+    b.onclick = () => { musicMuted = !musicMuted; master.gain.value = musicMuted ? 0 : .55; b.textContent = musicMuted ? 'كتم' : 'صوت'; };
+  } catch(e){}
+}
+/* الأبيات تتعاقب */
+function startVerses(){
+  const el = document.getElementById('verse'); let i = 0;
+  const show = () => {
+    const v = VERSES[i++ % VERSES.length];
+    el.innerHTML = v.a + '<br>' + v.b + '<small>— ' + v.by + '</small>';
+    el.classList.add('on');
+    setTimeout(() => el.classList.remove('on'), 6200);
+    setTimeout(show, 8200);
+  };
+  show();
+}
+function openGift(){
+  if (env.classList.contains('open')) return;
+  env.classList.add('open'); stage.classList.add('opened');
+  setTimeout(() => document.getElementById('scrim').classList.add('show'), 6000);
+  startMusic();
+  setTimeout(() => stage.classList.add('gone'), 1500);
+  setTimeout(() => { started = true; t0 = performance.now()/1000; }, 1800);
+  setTimeout(() => document.getElementById('bar').classList.add('show'), 1800 + (reduce ? 1500 : 11500));
+  setTimeout(startVerses, 1800 + (reduce ? 2000 : 13000));
+  setTimeout(() => replay.classList.add('show'), 1800 + (reduce ? 2500 : 12000));
+}
+const veil = document.getElementById('veil');
+function readLetter(on){ letter.classList.toggle('show', on); veil.classList.toggle('show', on); }
+document.getElementById('openLetter').addEventListener('click', () => readLetter(true));
+letter.addEventListener('click', e => { if (e.target.id === 'closeLetter') readLetter(false); });
+veil.addEventListener('click', () => readLetter(false));
+addEventListener('keydown', e => { if (e.key === 'Escape') readLetter(false); });
+addEventListener('pointermove', e => { parT = (e.clientX/W - .5)*2; });
+cv.addEventListener('pointerdown', e => { if (started && e.clientY > H*0.5) plant(e.clientX, e.clientY); });
+env.addEventListener('click', openGift);
+env.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openGift(); });
+replay.addEventListener('click', () => location.reload());
+
+resize();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
