@@ -13,20 +13,47 @@
   canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 
   /* ---------- envelope ---------- */
-  .stage{position:fixed;inset:0;display:grid;place-items:center;z-index:5;transition:opacity 1.4s ease,transform 1.4s ease}
-  .stage.gone{opacity:0;transform:scale(.7) translateY(40px);pointer-events:none}
-  .env{position:relative;width:min(340px,80vw);aspect-ratio:3/2;cursor:pointer;filter:drop-shadow(0 30px 40px rgba(0,0,0,.55));animation:float 3.4s ease-in-out infinite}
-  .env.open{animation:none}
-  @keyframes float{50%{transform:translateY(-12px)}}
+  .stage{position:fixed;inset:0;display:grid;place-items:center;z-index:5;perspective:1500px;transition:opacity 1.3s ease}
+  .stage.fade{opacity:0;pointer-events:none}
+  .float{transform-style:preserve-3d;animation:float 4.4s ease-in-out infinite}
+  .stage.opened .float{animation:none}
+  @keyframes float{50%{transform:translateY(-10px)}}
+  .env{--w:min(360px,82vw);position:relative;width:var(--w);aspect-ratio:3/2;cursor:pointer;transform-style:preserve-3d;transition:transform .35s ease-out;-webkit-tap-highlight-color:transparent;outline:none}
   .env>*{position:absolute}
-  .back{inset:0;border-radius:10px;background:linear-gradient(160deg,#f7a8be,#d9647f)}
-  .paper{left:8%;right:8%;top:8%;bottom:8%;border-radius:5px;background:linear-gradient(#fffaf3,#ffeede);transition:transform 1.1s cubic-bezier(.2,.8,.2,1) .55s;display:grid;place-items:center;color:#c0405e;font-family:'Aref Ruqaa',serif;font-size:22px}
-  .env.open .paper{transform:translateY(-62%)}
-  .front{inset:0;border-radius:10px;background:linear-gradient(200deg,#f3869f,#c94c6a);clip-path:polygon(0 0,50% 52%,100% 0,100% 100%,0 100%)}
-  .flap{left:0;right:0;top:0;height:56%;z-index:3;background:linear-gradient(#e0657f,#cf4f6c);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .8s ease}
-  .env.open .flap{transform:rotateX(180deg);z-index:0;transition:transform .8s ease,z-index 0s .4s}
-  .seal{left:50%;top:52%;width:58px;height:58px;margin:-29px 0 0 -29px;z-index:4;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff6a8d,#a3153f 70%);box-shadow:0 4px 10px rgba(0,0,0,.4),inset 0 -3px 6px rgba(0,0,0,.3);display:grid;place-items:center;font-size:26px;color:#ffd6df;transition:opacity .4s,transform .5s}
-  .env.open .seal{opacity:0;transform:scale(1.6)}
+  .env .shadow{left:5%;right:5%;bottom:-13%;height:15%;background:radial-gradient(ellipse at center,rgba(0,0,0,.6),transparent 70%);filter:blur(9px);transform:translateZ(-40px);transition:opacity .9s}
+  .env .back{inset:0;border-radius:8px;transform:translateZ(-3px);
+    background:repeating-linear-gradient(45deg,rgba(255,255,255,.06) 0 5px,transparent 5px 10px),linear-gradient(160deg,#b53b59,#862240)}
+  .env .card{left:6%;right:6%;top:7%;height:86%;border-radius:4px;transform:translateZ(0);transition:transform 1.6s cubic-bezier(.22,.9,.25,1);
+    background:repeating-linear-gradient(0deg,rgba(150,110,70,.045) 0 1px,transparent 1px 3px),linear-gradient(#fffaf2,#fbe9d6);
+    box-shadow:0 3px 12px rgba(0,0,0,.28);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#8f2a47;text-align:center}
+  .env .card::before{content:"";position:absolute;inset:7px;border:1px solid rgba(176,126,58,.6);border-radius:2px;pointer-events:none}
+  .env .card::after{content:"";position:absolute;inset:11px;border:1px solid rgba(176,126,58,.28);border-radius:1px;pointer-events:none}
+  .card .to{font:400 clamp(13px,3.4vw,16px)/1 'Amiri',serif;letter-spacing:.06em;color:#a8566c}
+  .card .nm{font:700 clamp(30px,8.6vw,44px)/1.25 'Aref Ruqaa',serif;color:#8f2a47}
+  .card .orn{width:42%;height:1px;position:relative;background:linear-gradient(90deg,transparent,#b07e3a 30%,#b07e3a 70%,transparent)}
+  .card .orn::after{content:"";position:absolute;left:50%;top:50%;width:7px;height:7px;background:#b07e3a;transform:translate(-50%,-50%) rotate(45deg)}
+  .env.out .card{transform:translateZ(0) translateY(-70%)}
+  .env.fly .card{transform:translateZ(720px) translateY(-62%);opacity:0;transition:transform 1.25s cubic-bezier(.55,0,.25,1),opacity .7s .55s ease}
+  .env .front,.env .flap{inset:auto;left:0;width:100%}
+  .env .front{top:0;height:100%;transform:translateZ(3px);filter:drop-shadow(0 -2px 6px rgba(0,0,0,.25))}
+  .env svg{display:block;width:100%;height:100%;overflow:visible}
+  .env .flap{top:0;height:54%;transform-origin:50% 0;transform-style:preserve-3d;transform:translateZ(6px) rotateX(0deg);transition:transform 1.15s cubic-bezier(.45,.05,.2,1)}
+  .env .flap>*{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+  .env .flap .in{transform:rotateX(180deg)}
+  .env.open .flap{transform:translateZ(-1.5px) rotateX(180deg)}
+  .env.fly>.back,.env.fly>.front,.env.fly>.flap,.env.fly>.shadow,.env.fly>.seal{opacity:0;transition:opacity .9s ease}
+  .env .seal{left:50%;top:54%;width:19%;aspect-ratio:1;transform:translate(-50%,-50%) translateZ(9px);animation:glow 2.6s ease-in-out infinite}
+  .env .seal .h{position:absolute;inset:0;transition:transform .9s cubic-bezier(.3,.7,.25,1),opacity .8s ease .1s}
+  .env .seal .l{clip-path:polygon(0 0,56% 0,45% 28%,59% 52%,46% 78%,53% 100%,0 100%)}
+  .env .seal .r{clip-path:polygon(56% 0,100% 0,100% 100%,53% 100%,46% 78%,59% 52%,45% 28%)}
+  .env.cracked .seal{animation:none}
+  .env.cracked .seal .l{transform:translate(-34%,26%) rotate(-24deg);opacity:0}
+  .env.cracked .seal .r{transform:translate(34%,30%) rotate(26deg);opacity:0}
+  @keyframes glow{50%{filter:drop-shadow(0 0 10px rgba(255,120,160,.75))}}
+  .flash{position:fixed;inset:0;z-index:6;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 45%,rgba(255,238,205,.96),rgba(255,160,205,.5) 42%,transparent 72%)}
+  .flash.on{animation:flash 1.7s ease-out forwards}
+  @keyframes flash{0%{opacity:0}28%{opacity:1}100%{opacity:0}}
+  #fx{position:fixed;inset:0;width:100%;height:100%;z-index:6;pointer-events:none}
   .hint{position:absolute;bottom:max(7vh,28px);left:50%;transform:translateX(-50%);white-space:nowrap;padding:10px 24px;border-radius:999px;background:rgba(20,6,30,.6);
     -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,190,210,.28);font-family:'Amiri',serif;font-size:19px;color:#ffe3ea;animation:pulse 2.4s ease-in-out infinite;transition:opacity .5s}
   .stage.opened .hint{opacity:0;animation:none}
@@ -73,16 +100,47 @@
 <canvas id="c"></canvas>
 
 <div class="stage" id="stage">
-  <div class="env" id="env" role="button" tabindex="0" aria-label="افتح الرسالة">
+  <div class="float">
+  <div class="env" id="env" role="button" tabindex="0" aria-label="افتح الهدية">
+    <div class="shadow"></div>
     <div class="back"></div>
-    <div class="paper" id="paperText"></div>
-    <div class="front"></div>
-    <div class="flap"></div>
-    <div class="seal"><svg width="26" height="24" viewBox="0 0 32 29" aria-hidden="true"><path fill="#ffd6df" d="M16 28C-6 14 4-4 16 7 28-4 38 14 16 28Z"/></svg></div>
+    <div class="card"><span class="to">إلى</span><span class="nm" id="paperText"></span><span class="orn"></span></div>
+    <div class="front"><svg viewBox="0 0 300 200" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="gL" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e98aa3"/><stop offset="1" stop-color="#cf5875"/></linearGradient>
+        <linearGradient id="gR" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9647f"/><stop offset="1" stop-color="#b8405e"/></linearGradient>
+        <linearGradient id="gB" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#f4a2b8"/><stop offset="1" stop-color="#dd6f89"/></linearGradient>
+      </defs>
+      <polygon points="0,0 150,106 0,200" fill="url(#gL)"/>
+      <polygon points="300,0 150,106 300,200" fill="url(#gR)"/>
+      <polygon points="0,200 150,100 300,200" fill="url(#gB)"/>
+      <path d="M0,0 L150,106 L300,0 M0,200 L150,100 L300,200" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1"/>
+    </svg></div>
+    <div class="flap">
+      <div class="out"><svg viewBox="0 0 300 108" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="gF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9879f"/><stop offset="1" stop-color="#c94766"/></linearGradient></defs><polygon points="0,0 300,0 150,108" fill="url(#gF)" stroke="rgba(255,255,255,.2)" stroke-width="1"/></svg></div>
+      <div class="in"><svg viewBox="0 0 300 108" preserveAspectRatio="none" aria-hidden="true"><defs><pattern id="pt" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="14" height="14" fill="#a02f4d"/><circle cx="7" cy="7" r="2" fill="rgba(255,220,230,.22)"/></pattern></defs><polygon points="0,0 300,0 150,108" fill="url(#pt)"/></svg></div>
+    </div>
+    <div class="seal">
+      <div class="h l"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#sealArt"/></svg></div>
+      <div class="h r"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#sealArt"/></svg></div>
+    </div>
   </div>
+  </div>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <radialGradient id="wax" cx="38%" cy="30%" r="75%"><stop offset="0" stop-color="#f0577f"/><stop offset=".6" stop-color="#b3174a"/><stop offset="1" stop-color="#7d0f35"/></radialGradient>
+    <g id="sealArt">
+      <circle cx="50" cy="50" r="44" fill="url(#wax)"/>
+      <circle cx="16" cy="40" r="9" fill="url(#wax)"/><circle cx="84" cy="62" r="10" fill="url(#wax)"/><circle cx="62" cy="90" r="8" fill="url(#wax)"/><circle cx="30" cy="84" r="7" fill="url(#wax)"/><circle cx="80" cy="20" r="8" fill="url(#wax)"/>
+      <circle cx="50" cy="50" r="32" fill="none" stroke="rgba(255,205,220,.4)" stroke-width="2"/>
+      <path d="M50 70C26 54 34 34 50 46 66 34 74 54 50 70Z" fill="#ffd6e0" opacity=".92"/>
+      <path d="M50 70C26 54 34 34 50 46" fill="none" stroke="rgba(120,10,45,.35)" stroke-width="1.5"/>
+    </g>
+  </defs></svg>
   <div class="hint">اضغطي على الظرف لتفتحي الهدية</div>
 </div>
 
+<div class="flash" id="flash"></div>
+<canvas id="fx"></canvas>
 <div class="scrim" id="scrim"></div>
 <div class="verse" id="verse"></div>
 <button class="snd" id="snd" aria-label="الموسيقى">صوت</button>
@@ -541,16 +599,59 @@ function startVerses(){
   };
   show();
 }
+/* ===== مؤثرات المظروف: غبار ذهبي ===== */
+const fx = document.getElementById('fx'), fctx = fx.getContext('2d');
+let fparts = [], fRun = false;
+function fxSize(){ const d = Math.min(devicePixelRatio || 1, 2); fx.width = innerWidth*d; fx.height = innerHeight*d; fctx.setTransform(d,0,0,d,0,0); }
+function burst(x, y, n, up){
+  for (let i = 0; i < n; i++){
+    const a = rnd(0, TAU), v = rnd(60, 340)*(up ? 1.1 : .8);
+    fparts.push({x, y, vx: Math.cos(a)*v, vy: Math.sin(a)*v - (up ? rnd(60,200) : 20), life: 1, d: rnd(.5,1.1), r: rnd(1.2,3.2),
+      c: ['255,228,150','255,175,205','255,255,255','255,205,120'][Math.floor(Math.random()*4)]});
+  }
+  if (!fRun){ fRun = true; let last = performance.now(); (function loop(now){
+    const dt = Math.min(.05, (now - last)/1000); last = now;
+    fctx.clearRect(0, 0, innerWidth, innerHeight);
+    fctx.globalCompositeOperation = 'lighter';
+    for (let i = fparts.length - 1; i >= 0; i--){
+      const p = fparts[i]; p.life -= dt/p.d*.55;
+      if (p.life <= 0){ fparts.splice(i,1); continue; }
+      p.vy += 160*dt; p.vx *= .985; p.vy *= .99; p.x += p.vx*dt; p.y += p.vy*dt;
+      const a = Math.min(1, p.life*1.6) * (.6 + .4*Math.sin(p.life*30 + p.x));
+      const g = fctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*4);
+      g.addColorStop(0, `rgba(${p.c},${a})`); g.addColorStop(1, `rgba(${p.c},0)`);
+      fctx.fillStyle = g; fctx.beginPath(); fctx.arc(p.x,p.y,p.r*4,0,TAU); fctx.fill();
+    }
+    fctx.globalCompositeOperation = 'source-over';
+    if (fparts.length) requestAnimationFrame(loop); else { fRun = false; fctx.clearRect(0,0,innerWidth,innerHeight); }
+  })(last); }
+}
+addEventListener('resize', fxSize); fxSize();
+/* ميلان المظروف مع حركة المؤشر */
+stage.addEventListener('pointermove', e => {
+  if (stage.classList.contains('opened')) return;
+  const dx = e.clientX/innerWidth - .5, dy = e.clientY/innerHeight - .5;
+  env.style.transform = `rotateX(${(-dy*10).toFixed(2)}deg) rotateY(${(dx*14).toFixed(2)}deg)`;
+});
 function openGift(){
-  if (env.classList.contains('open')) return;
-  env.classList.add('open'); stage.classList.add('opened');
-  setTimeout(() => document.getElementById('scrim').classList.add('show'), 6000);
-  startMusic();
-  setTimeout(() => stage.classList.add('gone'), 1500);
-  setTimeout(() => { started = true; t0 = performance.now()/1000; }, 1800);
-  setTimeout(() => document.getElementById('bar').classList.add('show'), 1800 + (reduce ? 1500 : 11500));
-  setTimeout(startVerses, 1800 + (reduce ? 2000 : 13000));
-  setTimeout(() => replay.classList.add('show'), 1800 + (reduce ? 2500 : 12000));
+  if (stage.classList.contains('opened')) return;
+  stage.classList.add('opened'); startMusic();
+  env.style.transform = '';
+  const k = reduce ? .35 : 1, at = (ms, fn) => setTimeout(fn, ms*k);
+  const box = () => env.getBoundingClientRect();
+  env.classList.add('cracked');
+  at(30, () => { const b = box(); burst(b.left + b.width/2, b.top + b.height*.54, 30, false); });
+  at(500, () => env.classList.add('open'));
+  at(1550, () => { env.classList.add('out'); const b = box(); burst(b.left + b.width/2, b.top + b.height*.25, 90, true); });
+  at(3100, () => env.classList.add('fly'));
+  at(3400, () => document.getElementById('flash').classList.add('on'));
+  at(3800, () => stage.classList.add('fade'));
+  const T0 = 3600*k;
+  setTimeout(() => { started = true; t0 = performance.now()/1000; }, T0);
+  setTimeout(() => document.getElementById('scrim').classList.add('show'), T0 + 4400);
+  setTimeout(() => document.getElementById('bar').classList.add('show'), T0 + (reduce ? 1500 : 11500));
+  setTimeout(startVerses, T0 + (reduce ? 2000 : 13000));
+  setTimeout(() => replay.classList.add('show'), T0 + (reduce ? 2500 : 12000));
 }
 const veil = document.getElementById('veil');
 function readLetter(on){ letter.classList.toggle('show', on); veil.classList.toggle('show', on); }
